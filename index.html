@@ -189,7 +189,7 @@
         <div id="canvas-3d-container"></div>
         <div id="ai-loader">
             <i class="fas fa-hand-sparkles"></i> Cho phép Camera để dùng tay tương tác!<br>
-            <span style="font-size:0.8em; font-weight:normal;">(Mở tay: Bung cây • Chụm tay: Lấy quà • Di tay: Xoay)</span>
+            <span style="font-size:0.8em; font-weight:normal;">(Nắm: Cây thường • Xòe: Bung cây • Chụm: Lấy quà)</span>
         </div>
 
         <div id="ui-3d-controls">
@@ -238,15 +238,16 @@
             <div class="guide-text">
                 <ul>
                     <li><b>Bước 1:</b> Nhập tên và bật đèn để vào không gian Giáng Sinh.</li>
-                    <li><b>Bước 2:</b> Dùng <b>chuột</b> (kéo thả) hoặc <b>tay</b> (qua camera) để xoay cây thông.</li>
-                    <li><b>Bước 3 (Camera):</b> 
+                    <li><b>Bước 2 (Camera):</b> Dùng các cử chỉ tay để tương tác:
                         <ul>
-                            <li>🖐 Mở tay: Cây sẽ bung ra.</li>
-                            <li>👌 Chụm ngón tay: "Gắp" quà trên cây để mở.</li>
+                            <li>✊ <b>Nắm bàn tay:</b> Cây thông bình thường.</li>
+                            <li>🖐 <b>Xòe bàn tay:</b> Cây bung ra (Explode).</li>
+                            <li>👌 <b>Chụm 2 ngón (Cái & Trỏ):</b> Bắt lấy quà trên cây để mở.</li>
+                            <li>👋 <b>Phẩy tay (Trái/Phải):</b> Xoay cây thông.</li>
                         </ul>
                     </li>
-                    <li><b>Bước 4:</b> Mở Hộp Quà Lớn ở chân cây (chỉ mở được 1 lần, hãy ước trước khi mở nhé!).</li>
-                    <li><b>Bước 5:</b> Chia sẻ lời chúc hoặc ảnh của bạn lên cây để mọi người cùng thấy.</li>
+                    <li><b>Bước 3:</b> Mở Hộp Quà Lớn ở chân cây (chỉ mở được 1 lần).</li>
+                    <li><b>Bước 4:</b> Chia sẻ lời chúc/ảnh lên cây.</li>
                 </ul>
             </div>
             <button class="btn" onclick="document.getElementById('guide-modal').classList.remove('active')">Đã hiểu</button>
@@ -340,7 +341,7 @@
             fetchCommunityGifts(); // Load gifts
 
             initMediaPipe().then(() => {
-                document.getElementById('ai-loader').innerHTML = "<i class='fas fa-check'></i> AI Đã Sẵn Sàng<br>Giơ tay trước camera để chơi!";
+                document.getElementById('ai-loader').innerHTML = "<i class='fas fa-check'></i> AI Đã Sẵn Sàng<br>✊ Nắm: Cây thường | 🖐 Xòe: Bung cây | 👌 Chụm: Lấy quà";
             });
 
             document.body.addEventListener('click', function playAudio() {
@@ -593,7 +594,8 @@
             requestAnimationFrame(animate3D);
             const dt = clock.getDelta();
             if (STATE.hand.detected) {
-                STATE.rotation.y += (STATE.hand.x * 2 - STATE.rotation.y) * 2 * dt;
+                // Tăng tốc độ xoay để "phẩy" nhạy hơn một chút
+                STATE.rotation.y += (STATE.hand.x * 2.5 - STATE.rotation.y) * 3 * dt;
             } else {
                 STATE.rotation.y += (STATE.mode === 'TREE' ? 0.3 : 0.1) * dt;
             }
@@ -635,33 +637,59 @@
         }
 
         let lastVideoTime = -1;
+        
+        // --- CẬP NHẬT LOGIC NHẬN DIỆN CỬ CHỈ ---
         function predictWebcam() {
             if (!handLandmarker || !video || video.currentTime === lastVideoTime) return;
             lastVideoTime = video.currentTime;
             const result = handLandmarker.detectForVideo(video, performance.now());
+            
             if (result.landmarks && result.landmarks.length > 0) {
                 STATE.hand.detected = true;
                 const lm = result.landmarks[0];
-                STATE.hand.x = (lm[9].x - 0.5) * 2; STATE.hand.y = (lm[9].y - 0.5) * 2;
+                STATE.hand.x = (lm[9].x - 0.5) * 2; 
+                STATE.hand.y = (lm[9].y - 0.5) * 2;
+
                 const thumb = lm[4]; const index = lm[8]; const wrist = lm[0];
+                // Khoảng cách ngón cái - ngón trỏ (cho Pinch)
                 const pinchDist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+                
+                // Khoảng cách trung bình các đầu ngón tay tới cổ tay (cho Fist/Open)
                 const tips = [lm[8], lm[12], lm[16], lm[20]];
-                let avgDist = 0; tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
+                let avgDist = 0; 
+                tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
                 avgDist /= 4;
-                if (pinchDist < 0.05) { 
+
+                // LOGIC MỚI: ƯU TIÊN FIST (NẮM) TRƯỚC
+                if (avgDist < 0.3) { 
+                    // 1. NẮM TAY (Fist): Luôn ưu tiên về trạng thái cây thường
+                    // Kể cả khi pinchDist nhỏ (do nắm tay thì ngón cái và trỏ cũng gần nhau)
+                    if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE';
+                } 
+                else if (avgDist > 0.45) { 
+                    // 2. XÒE TAY (Open): Bung cây (tăng ngưỡng lên 0.45 để không quá nhạy)
+                    if(STATE.mode !== 'FOCUS') STATE.mode = 'SCATTER';
+                } 
+                else if (pinchDist < 0.06) { 
+                    // 3. CHỤM TAY (Pinch): Lấy quà
+                    // Chỉ xảy ra khi KHÔNG nắm tay (avgDist >= 0.3) và pinchDist nhỏ
                     if (STATE.mode !== 'FOCUS') {
                         const candidates = particleSystem.filter(p => p.type === 'PHOTO' || p.type === 'GIFT_PARTICLE');
                         const randomTarget = candidates.length > 0 ? candidates[Math.floor(Math.random() * candidates.length)] : particleSystem[Math.floor(Math.random() * particleSystem.length)];
-                        STATE.mode = 'FOCUS'; STATE.focusTarget = randomTarget.mesh;
+                        
+                        STATE.mode = 'FOCUS'; 
+                        STATE.focusTarget = randomTarget.mesh;
+                        
                         if(STATE.focusTimeout) clearTimeout(STATE.focusTimeout);
                         STATE.focusTimeout = setTimeout(() => {
                             window.openTreeGift();
                             STATE.mode = 'TREE'; STATE.focusTarget = null;
                         }, 1200);
                     }
-                } else if (avgDist < 0.25) { if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE'; }
-                else if (avgDist > 0.4) { if(STATE.mode !== 'FOCUS') STATE.mode = 'SCATTER'; }
-            } else { STATE.hand.detected = false; }
+                }
+            } else { 
+                STATE.hand.detected = false; 
+            }
         }
 
         // 7 lời chúc tĩnh mới
