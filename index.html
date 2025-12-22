@@ -3,95 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giáng Sinh Yêu Thương</title>
+    <title>Giáng Sinh Yêu Thương 3D</title>
     <!-- Import font chữ đẹp -->
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <!-- Font Awesome cho icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- Cấu hình thư viện 3D và AI -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm"
+            }
+        }
+    </script>
+
     <style>
-        /* --- CSS --- */
-        :root { --primary-red: #d42426; --primary-green: #165b33; --gold: #ffd700; }
+        /* --- CSS GỐC CỦA INDEX (Đã chỉnh sửa để hợp nhất) --- */
+        :root { --primary-red: #d42426; --primary-green: #165b33; --gold: #ffd700; --snow-white: #f0f8ff; --text-dark: #2c3e50; }
         body { margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; overflow: hidden; background-color: #0f172a; height: 100vh; width: 100vw; color: white; }
-        .hidden { display: none !important; }
+        .hidden { display: none !important; opacity: 0; pointer-events: none; } 
         .flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; text-align: center; }
         .btn { background: var(--primary-red); color: white; border: 2px solid white; padding: 12px 30px; font-size: 1.2rem; border-radius: 25px; cursor: pointer; font-family: 'Mountains of Christmas', cursive; transition: all 0.3s; box-shadow: 0 4px 15px rgba(212, 36, 38, 0.5); margin-top: 20px; z-index: 100; position: relative; }
         .btn:hover { transform: scale(1.05); background: #b01b1d; }
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { background: #555; cursor: not-allowed; border-color: #777; box-shadow: none; }
-        
-        #stage-1 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop'); background-size: cover; background-position: center; }
-        .input-box { background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); color: #333; max-width: 90%; width: 350px; }
+        .btn-blue { background: #0084ff; border-color: #0066cc; box-shadow: 0 4px 15px rgba(0, 132, 255, 0.4); }
+        .btn-blue:hover { background: #0066cc; }
+        .btn-green { background: var(--primary-green); border-color: #0f3d22; }
+        .btn-green:hover { background: #0f3d22; }
+        .btn-control { background: #333; color: white; font-size: 0.9rem; padding: 5px 15px; border-radius: 15px; margin-top: 5px; border: none; cursor: pointer; }
+        .btn-control:hover { background: #555; }
+
+        /* Stage 1 & 2 giữ nguyên */
+        #stage-1 { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?q=80&w=1920&auto=format&fit=crop'); background-size: cover; background-position: center; position: absolute; top:0; left:0; z-index: 200; }
+        .input-box { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); color: #333; max-width: 90%; width: 350px; position: relative;}
         .input-box h2 { font-family: 'Mountains of Christmas', cursive; font-size: 2rem; color: var(--primary-green); margin-top: 0; }
-        input[type="text"] { width: 80%; padding: 10px; border: 2px solid var(--primary-green); border-radius: 5px; font-size: 1rem; text-align: center; outline: none; }
-        
-        #stage-2 { background-color: #000; position: relative; }
+        input[type="text"], textarea { width: 80%; padding: 10px; border: 2px solid var(--primary-green); border-radius: 5px; font-size: 1rem; text-align: center; outline: none; }
+        textarea { height: 80px; text-align: left; }
+
+        #stage-2 { background-color: #000; position: absolute; top:0; left:0; z-index: 190; width: 100vw; height: 100vh; }
         .light-bulbs-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
         .bulb { position: absolute; width: 15px; height: 15px; border-radius: 50%; background: #222; transition: all 0.2s; opacity: 0; }
         .bulb.on { opacity: 1; box-shadow: 0 0 15px 5px currentColor; animation: flash 0.8s ease-in-out; }
         @keyframes flash { 0% { transform: scale(1); opacity: 0; } 10% { transform: scale(1.5); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 0; } }
+
+        /* Stage 3 - Main Scene */
+        #stage-3 { 
+            background: linear-gradient(to bottom, #d6eaf8, #ebf5fb, #ffffff);
+            position: absolute; top: 0; left: 0; height: 100vh; width: 100vw; overflow: hidden; z-index: 50; 
+            color: var(--text-dark); 
+        }
+
+        #canvas-3d-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2; 
+            pointer-events: auto; 
+        }
         
-        #stage-3 { background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); position: relative; height: 100vh; width: 100vw; overflow: hidden; }
-        .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        #ui-3d-controls {
+            position: absolute; bottom: 120px; right: 20px; z-index: 150;
+            display: flex; flex-direction: column; align-items: flex-end;
+            transition: opacity 0.5s;
+        }
+        .upload-btn-3d {
+            background: rgba(0, 0, 0, 0.7); 
+            border: 1px solid rgba(212, 175, 55, 0.6); 
+            color: #d4af37; padding: 8px 15px; cursor: pointer; text-transform: uppercase; 
+            font-size: 10px; backdrop-filter: blur(5px); display: inline-block;
+            border-radius: 5px;
+        }
+        .upload-btn-3d:hover { background: #d4af37; color: #000; }
+        #file-input-3d { display: none; }
+
+        #webcam-wrapper { display: none; }
+
+        #ai-loader {
+            position: absolute; top: 10px; right: 10px; z-index: 200;
+            color: #d4af37; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+            background: rgba(0,0,0,0.8); 
+            padding: 5px 10px; border-radius: 5px;
+        }
+
+        .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
         .firework-particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: explode 1s ease-out forwards; }
         @keyframes explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
-        .clouds-container { position: absolute; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 1; }
-        .cloud { position: absolute; width: 150px; opacity: 0.7; animation: floatCloud 30s linear infinite; }
+        
+        .clouds-container { position: absolute; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 3; opacity: 0.8; }
+        .cloud { position: absolute; width: 150px; opacity: 0.9; animation: floatCloud 30s linear infinite; filter: brightness(1.2); } 
         @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
         
-        /* --- ĐIỀU CHỈNH VỊ TRÍ CAO HƠN CHO MOBILE --- */
-        .snow-hill { position: absolute; bottom: 0; left: 0; width: 100%; height: 35vh; background: white; border-radius: 100% 100% 0 0 / 50% 50% 0 0; transform: scaleX(1.5); z-index: 1; box-shadow: 0 0 30px rgba(255, 255, 255, 0.8); }
-        
-        .christmas-tree { position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%); z-index: 5; width: 260px; height: auto; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-        .tree-img { width: 100%; height: auto; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); }
-        .tree-light { position: absolute; width: 10px; height: 10px; border-radius: 50%; z-index: 6; animation: treeBlink 1.5s infinite alternate; }
-        @keyframes treeBlink { from { opacity: 0.6; transform: scale(0.8); box-shadow: 0 0 3px currentColor; } to { opacity: 1; transform: scale(1.2); box-shadow: 0 0 10px currentColor; } }
-        
-        .star-top { 
-            font-size: 3rem; 
-            color: #ffd700; 
-            position: absolute; 
-            top: -6%; 
-            left: 53.5%; 
-            transform: translateX(-50%); 
-            filter: drop-shadow(0 0 15px gold); 
-            animation: twinkle 1s infinite alternate; 
-            z-index: 10; 
-        }
-        @keyframes twinkle { from { transform: translateX(-50%) scale(1); opacity: 0.8; } to { transform: translateX(-50%) scale(1.2); opacity: 1; } }
+        .snow-hill { position: absolute; bottom: 0; left: 0; width: 100%; height: 25vh; background: #ffffff; border-radius: 100% 100% 0 0 / 50% 50% 0 0; transform: scaleX(1.5); z-index: 3; box-shadow: 0 -5px 20px rgba(176, 196, 222, 0.5); pointer-events: none; }
         
         .santa-fly { position: absolute; top: 10%; left: -300px; width: 250px; z-index: 4; animation: flyAcross 20s linear infinite; }
         .santa-fly img { width: 100%; }
         @keyframes flyAcross { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(30vw) translateY(-40px); } 50% { transform: translateX(60vw) translateY(0); } 75% { transform: translateX(90vw) translateY(-40px); } 100% { transform: translateX(120vw) translateY(0); } }
         
-        .decor-gift { position: absolute; z-index: 6; filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); transition: transform 0.3s; }
+        .decor-gift { position: absolute; z-index: 6; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); transition: transform 0.3s; }
         .decor-gift:hover { transform: scale(1.1) translateY(-5px); }
         
-        #special-gift-container { position: absolute; bottom: 18vh; left: 50%; transform: translateX(-50%) scale(0); z-index: 100; transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; }
+        #special-gift-container { position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%) scale(0); z-index: 100; transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; }
         #special-gift-container.show { transform: translateX(-50%) scale(1); }
         .big-gift-img { width: 140px; cursor: pointer; filter: drop-shadow(0 0 20px gold); animation: shake 2s infinite; }
         @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
         
-        .snowflake { position: absolute; top: -10px; color: #fff; font-size: 1em; font-family: Arial, sans-serif; text-shadow: 0 0 5px #000; z-index: 5; animation: fall linear infinite; }
+        .snowflake { position: absolute; top: -10px; color: #a9cce3; font-size: 1.2em; font-family: Arial, sans-serif; text-shadow: 0 0 2px #fff; z-index: 5; animation: fall linear infinite; opacity: 0.8; }
         @keyframes fall { to { transform: translateY(105vh); } }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        
+        /* Modals */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 300; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
         .modal.active { opacity: 1; pointer-events: all; }
         .modal-content { background: #fffafa; color: #333; width: 90%; max-width: 400px; padding: 20px; border-radius: 15px; text-align: center; border: 5px solid var(--primary-red); position: relative; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 50px rgba(212, 36, 38, 0.5); }
-        .santa-gift img { width: 80%; border-radius: 10px; margin-bottom: 10px; }
-        .letter-gift { background: #fffde7; padding: 20px; border: 1px dashed #999; font-family: 'Times New Roman', serif; font-size: 1.2rem; line-height: 1.6; text-align: left; }
-        .money-gift { color: var(--primary-red); font-weight: bold; }
-        .money-amount { font-size: 3.5rem; color: #d4ac0d; margin: 10px 0; text-shadow: 2px 2px 0px #fff; }
-        .messenger-btn { background: #0084ff; color: white; text-decoration: none; padding: 12px 25px; border-radius: 25px; display: inline-block; margin-top: 15px; font-weight: bold; box-shadow: 0 4px 10px rgba(0, 132, 255, 0.3); }
+        
+        .letter-gift { background: #fffde7; padding: 20px; border: 1px dashed #999; font-family: 'Times New Roman', serif; font-size: 1.2rem; line-height: 1.6; text-align: left; white-space: pre-wrap; }
+        
+        /* CẬP NHẬT CSS VIDEO */
+        .video-container { width: 100%; margin-top: 10px; background: #000; border-radius: 10px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        .video-container video { width: 100%; height: auto; display: block; max-height: 250px; }
+
         .tiktok-logo { position: fixed; bottom: 20px; left: 20px; width: 50px; z-index: 150; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); cursor: pointer; transition: transform 0.1s; }
         .tiktok-logo:active { transform: scale(0.9); }
-        #audio-player { display: none; }
-        .gift-tag { padding: 2px 5px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .tag-money { background: #ffd700; color: #d42426; }
-        .tag-santa { background: #ffcccc; color: #d42426; }
-        .tag-wish { background: #e0e0e0; color: #333; }
-        .detail-info { font-size: 0.85rem; color: #555; display: block; margin-top: 2px; }
-        .admin-note { font-size: 0.9rem; margin-bottom: 15px; color: #555; font-style: italic; }
-        .sheet-link { display: inline-block; padding: 10px 20px; background: #165b33; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+        
+        .user-gift-meta { font-size: 0.9rem; color: #666; font-style: italic; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 5px; }
+        .signature-fr { display: block; text-align: right; margin-top: 15px; font-weight: bold; color: var(--primary-green); font-style: italic; }
+
+        #share-form { display: none; margin-top: 15px; border-top: 2px dashed #ddd; padding-top: 15px; }
+        .share-type-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+        .share-type-btn { padding: 5px 10px; border: 1px solid #ccc; background: #eee; cursor: pointer; border-radius: 5px; }
+        .share-type-btn.active { background: var(--primary-green); color: white; border-color: var(--primary-green); }
+        
+        .guide-text { text-align: left; line-height: 1.6; font-size: 1rem; }
+        .guide-text li { margin-bottom: 8px; }
+
+        /* --- TOAST NOTIFICATION (POPUP NỔI) --- */
+        #toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; pointer-events: none;
+        }
+        .toast {
+            background: rgba(255, 255, 255, 0.95); color: #333;
+            padding: 15px 25px; border-radius: 50px;
+            margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-family: 'Quicksand', sans-serif; font-weight: bold;
+            display: flex; align-items: center; gap: 10px;
+            border: 2px solid var(--primary-green);
+            opacity: 0; transform: translateY(-20px);
+            transition: all 0.4s ease;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast i { color: var(--primary-red); font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -102,180 +163,268 @@
             <h2><i class="fas fa-sleigh"></i> Chào bạn!</h2>
             <p>Cho mình biết tên bạn là gì nhỉ?</p>
             <input type="text" id="user-name" placeholder="Nhập tên của bạn...">
-            <button class="btn" id="btn-submit" onclick="submitName()">Tiếp <i class="fas fa-arrow-right"></i></button>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button class="btn btn-green" onclick="window.showGuideModal()" style="font-size: 1rem; padding: 10px 20px; margin-top: 0;">
+                    <i class="fas fa-question-circle"></i> Hướng dẫn sd web
+                </button>
+                <button class="btn" id="btn-submit" onclick="window.submitName()" style="margin-top: 0;">
+                    Tiếp <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
             <p id="ip-loading" style="font-size:0.8rem; color:#666; margin-top:5px;">Đang tải dữ liệu...</p>
         </div>
     </div>
 
-    <!-- STAGE 2: MÀN HÌNH TỐI & BẬT ĐÈN -->
+    <!-- STAGE 2: BẬT ĐÈN -->
     <div id="stage-2" class="flex-center hidden">
         <div class="light-bulbs-container" id="bulbs-container"></div>
-        <button id="light-btn" class="btn" onclick="clickLight()">
+        <button id="light-btn" class="btn" onclick="window.clickLight()">
             <i class="fas fa-lightbulb"></i> Bật đèn
         </button>
     </div>
 
-    <!-- STAGE 3 (MAIN): KHUNG CẢNH NOEL -->
+    <!-- STAGE 3 (MAIN): KHUNG CẢNH NOEL 3D -->
     <div id="stage-3" class="hidden">
+        
+        <div id="canvas-3d-container"></div>
+        <div id="ai-loader">
+            <i class="fas fa-hand-sparkles"></i> Cho phép Camera để dùng tay tương tác!<br>
+            <span style="font-size:0.8em; font-weight:normal;">(Mở tay: Bung cây • Chụm tay: Lấy quà • Di tay: Xoay)</span>
+        </div>
+
+        <div id="ui-3d-controls">
+            <label class="upload-btn-3d">
+                <i class="fas fa-camera"></i> Treo ảnh lên cây
+                <input type="file" id="file-input-3d" multiple accept="image/*">
+            </label>
+        </div>
+
         <div class="fireworks-container" id="fireworks-container"></div>
         <div class="clouds-container">
             <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/cloud.png?alt=media&token=acc83aac-8e9c-4783-8c6f-2a2531257d38" class="cloud" style="top: 8%; animation-duration: 40s;">
             <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/cloud.png?alt=media&token=acc83aac-8e9c-4783-8c6f-2a2531257d38" class="cloud" style="top: 20%; animation-duration: 55s; left: -150px; opacity: 0.5;">
-            <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/cloud.png?alt=media&token=acc83aac-8e9c-4783-8c6f-2a2531257d38" class="cloud" style="top: 5%; animation-duration: 35s; right: -150px; opacity: 0.6;">
         </div>
+        
         <div class="snow-hill"></div>
-        <div class="christmas-tree" id="tree-container">
-            <div class="star-top"><i class="fas fa-star"></i></div>
-            <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/pineTree.png?alt=media&token=2d82b851-6e4e-4518-a7a8-e06126b47e34" class="tree-img" alt="Tree">
-        </div>
+        
         <div class="santa-fly">
             <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/santa.png?alt=media&token=a81ad9d6-4f75-498e-9ba4-3e28673c942f" alt="Santa">
         </div>
         
-        <!-- Hộp quà trang trí -->
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 22vh; left: 10%; width: 65px;">
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 20vh; right: 18%; width: 80px; filter: hue-rotate(90deg) drop-shadow(0 0 5px white);">
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 24vh; right: 8%; width: 55px; filter: hue-rotate(45deg) drop-shadow(0 0 5px white);">
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 22vh; left: 22%; width: 45px; filter: hue-rotate(180deg) drop-shadow(0 0 5px white);">
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 25vh; left: 30%; width: 40px; filter: hue-rotate(270deg);">
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 21vh; right: 30%; width: 50px; filter: hue-rotate(130deg);">
+        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 10vh; left: 10%; width: 65px;">
+        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="decor-gift" style="bottom: 8vh; right: 18%; width: 80px; filter: hue-rotate(90deg) drop-shadow(0 0 5px white);">
 
         <!-- Hộp quà đặc biệt -->
         <div id="special-gift-container">
-            <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="big-gift-img" onclick="openSpecialGift()">
-            <div class="btn" style="padding: 5px 20px; font-size: 1.1rem; margin-top: 10px;" onclick="openSpecialGift()">Mở Ngay 🎁</div>
+            <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/Gift_Flat_Icon_Vector.svg?alt=media&token=8bb72a2d-183c-462b-a1b8-e42af9bf52e0" class="big-gift-img" onclick="window.openSpecialGift()">
+            <div class="btn" style="padding: 5px 20px; font-size: 1.1rem; margin-top: 10px;" onclick="window.openSpecialGift()">Mở Ngay 🎁</div>
         </div>
 
-        <!-- Logo Tiktok -->
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/logo-tiktok.png?alt=media&token=4473a42a-e492-4a4d-8821-ed9348ac2339" class="tiktok-logo" alt="TikTok" onclick="handleTikTokClick()">
+        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/logo-tiktok.png?alt=media&token=4473a42a-e492-4a4d-8821-ed9348ac2339" class="tiktok-logo" alt="TikTok" onclick="window.handleTikTokClick()">
+    </div>
+    
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <div id="webcam-wrapper">
+        <video id="webcam" autoplay playsinline></video>
+        <canvas id="webcam-preview"></canvas>
+    </div>
+
+    <!-- MODAL HƯỚNG DẪN -->
+    <div id="guide-modal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary-green); font-family: 'Mountains of Christmas', cursive; font-size: 2rem;">🎄 Hướng Dẫn Sử Dụng 🎄</h3>
+            <div class="guide-text">
+                <ul>
+                    <li><b>Bước 1:</b> Nhập tên và bật đèn để vào không gian Giáng Sinh.</li>
+                    <li><b>Bước 2:</b> Dùng <b>chuột</b> (kéo thả) hoặc <b>tay</b> (qua camera) để xoay cây thông.</li>
+                    <li><b>Bước 3 (Camera):</b> 
+                        <ul>
+                            <li>🖐 Mở tay: Cây sẽ bung ra.</li>
+                            <li>👌 Chụm ngón tay: "Gắp" quà trên cây để mở.</li>
+                        </ul>
+                    </li>
+                    <li><b>Bước 4:</b> Mở Hộp Quà Lớn ở chân cây (chỉ mở được 1 lần, hãy ước trước khi mở nhé!).</li>
+                    <li><b>Bước 5:</b> Chia sẻ lời chúc hoặc ảnh của bạn lên cây để mọi người cùng thấy.</li>
+                </ul>
+            </div>
+            <button class="btn" onclick="document.getElementById('guide-modal').classList.remove('active')">Đã hiểu</button>
+        </div>
     </div>
 
     <!-- MODAL KẾT QUẢ -->
     <div id="result-modal" class="modal">
         <div class="modal-content">
             <div id="modal-body"></div>
-            <button class="btn" onclick="closeModal()" style="margin-top: 20px; background: #555; padding: 8px 20px; font-size: 1rem;">Đóng</button>
+            
+            <button class="btn btn-blue" id="btn-share-community" onclick="window.toggleShareForm()" style="margin-top: 15px; font-size: 1rem; padding: 8px 15px;">
+                <i class="fas fa-paper-plane"></i> Gửi quà lại cho mọi người
+            </button>
+
+            <div id="share-form">
+                <h4>Gửi lời chúc/Ảnh của bạn</h4>
+                <div class="share-type-selector">
+                    <div class="share-type-btn active" onclick="window.setShareType('text')">Lời chúc</div>
+                    <div class="share-type-btn" onclick="window.setShareType('image')">Hình ảnh</div>
+                </div>
+                
+                <div id="share-input-text">
+                    <textarea id="user-wish-input" placeholder="Viết lời chúc của bạn vào đây..."></textarea>
+                </div>
+                <div id="share-input-image" class="hidden">
+                    <input type="text" id="user-image-url" placeholder="Dán link ảnh (URL) vào đây...">
+                    <p style="font-size: 0.85rem; color: #555; margin-top: 5px;">
+                        💡 <b>Mẹo:</b> Bạn có thể dùng <a href="https://postimages.org/" target="_blank" style="color: var(--primary-red); font-weight: bold;">postimages.org</a> để upload ảnh và copy <b>"Direct Link(liên kết trực )"</b> dán vào đây.
+                    </p>
+                    <p style="font-size: 0.8rem; color: #888;">(Hoặc tải lên ở chế độ 3D để xem trước trên thiết bị này)</p>
+                </div>
+
+                <button class="btn" onclick="window.submitUserGift()" style="font-size: 1rem; padding: 5px 20px; margin-top: 10px;">Gửi đi</button>
+            </div>
+
+            <button class="btn" onclick="window.closeModal()" style="margin-top: 20px; background: #555; padding: 8px 20px; font-size: 1rem;">Đóng</button>
         </div>
     </div>
 
-    <!-- MODAL ADMIN -->
-    <div id="admin-modal" class="modal">
-        <div class="modal-content">
-            <h2 style="color:#333; margin-top:0;">📋 Quản lý quà tặng</h2>
-            <p class="admin-note">
-                Dữ liệu hiện được lưu trên Google Sheets.<br>
-                Bạn hãy mở file Google Sheet của bạn để xem danh sách chi tiết.
-            </p>
-            <a id="sheet-link-btn" href="#" target="_blank" class="sheet-link">
-                Mở Google Sheet <i class="fas fa-external-link-alt"></i>
-            </a>
-            <button class="btn" onclick="closeAdmin()" style="margin-top: 20px; background: #555; padding: 8px 20px; font-size: 1rem;">Đóng Admin</button>
-        </div>
-    </div>
-
-    <!-- AUDIO -->
-    <audio id="bg-music" loop autoplay>
+    <audio id="bg-music" loop>
         <source src="nhacnoel.mp3" type="audio/mp3">
     </audio>
     <audio id="effect-music"></audio>
 
-    <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwjhTvWVWWLku1yEXAFwAiYrnTLiaW8YOqNTyl_kqGdTRLGQLcDfzINzA948p8BPN1TiQ/exec"; 
-        const GOOGLE_SHEET_LINK = "https://docs.google.com/spreadsheets/d/1rrLlJsrGmfxkkNlx9-bx1brRJ0KC0-176iPUAncTnEI/edit?gid=0#gid=0"; 
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx-XIGfD-kVod2O9SeQJetwikxCOOd4qfj9iYHazO_GIRrQsyp6jyGcEOR9mgrY-i6APQ/exec";
+        
+        // PHÂN LOẠI QUÀ:
+        let systemGifts = []; // Quà mặc định
+        let userGifts = [];   // Quà từ người dùng
+        
         let userName = "";
-        let userId = "";
-        let userIp = ""; 
+        let userIp = "";
         let clickCount = 0;
         const requiredClicks = 3;
-        const giftDelay = 6000;
-
-        const wishes = [
-            "Chúc bạn {name} một mùa Giáng sinh thật an lành và trọn vẹn. Mong rằng những khoảnh khắc trong mùa lễ này sẽ mang đến cho bạn sự ấm áp, bình yên và niềm vui lan tỏa trong từng ngày.",
-            "Merry Christmas! Chúc bạn {name} luôn mỉm cười và hạnh phúc trong suốt mùa lễ hội. Hy vọng tiếng chuông Giáng sinh sẽ mang đến cho bạn những điều may mắn và những cơ hội mới thật tuyệt vời.",
-            "Giáng sinh lại đến, chúc bạn {name} đón mùa lễ trong yêu thương và sự quan tâm của những người thân yêu. Mong rằng mọi ước mơ của bạn sẽ trở thành hiện thực khi năm mới đang đến gần.",
-            "Chúc bạn {name} một Giáng sinh vui vẻ và đầy ý nghĩa. Hy vọng những ngày cuối năm sẽ mang theo hạnh phúc, sự bình an và thật nhiều điều tốt đẹp để bạn bắt đầu một chặng đường mới.",
-            "Giáng sinh vui vẻ! Mong rằng ánh đèn lung linh và không khí ấm áp mùa này sẽ đem lại cho bạn {name} thật nhiều tiếng cười, những kỷ niệm đẹp và những giây phút hạnh phúc khó quên.",
-            "Chúc bạn {name} mùa Noel tràn ngập niềm vui, sức khỏe và bình an. Hy vọng bạn sẽ có thời gian thật đẹp bên gia đình, bạn bè và những người bạn quý trọng nhất.",
-            "Gửi đến bạn {name} lời chúc Noel thật chân thành: mong bạn luôn mạnh mẽ, may mắn và hạnh phúc. Hy vọng năm mới sẽ mở ra nhiều cơ hội tốt đẹp, còn Giáng sinh này sẽ là khởi đầu đầy ấm áp cho tất cả."
-        ];
-
-        const prizes = [
-            { code: "008", value: 2000, max: 2 }, 
-            { code: "006", value: 3000, max: 2 }, 
-            { code: "010", value: 5000, max: 1 }  
-        ];
-
-        const songList = ["nhacquatang.mp3", "nhacquatang2.mp3", "nhacquatang3.mp3"];
-        const songLinks = ["nhacquatang.mp3", "nhacquatang2.mp3", "nhacquatang3.mp3"];
         
-        // Danh sách Video tương ứng (Bạn cần tự chuẩn bị file video)
-        const videoList = [
-            "video1.mp4",
-            "video2.mp4",
-            "video3.mp4"
-        ];
+        // --- 3D & AI VARIABLES ---
+        let scene, camera, renderer, composer, mainGroup, particleSystem = [];
+        let clock = new THREE.Clock();
+        let handLandmarker, video;
+        let is3DRunning = false;
+        
+        const STATE = {
+            mode: 'TREE', 
+            focusTarget: null,
+            focusTimer: 0,
+            hand: { detected: false, x: 0, y: 0 },
+            rotation: { x: 0, y: 0 } 
+        };
 
-        function safePlay(audioElement) {
-            if (audioElement) {
-                const playPromise = audioElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log('Playback prevented:', error);
-                    });
-                }
-            }
-        }
+        const CONFIG = {
+            colors: { 
+                champagneGold: 0xffd966, 
+                deepGreen: 0x03180a, 
+                accentRed: 0xd42426, 
+                metallicOrange: 0xffa500 
+            },
+            particles: { count: 2500, treeHeight: 20, treeRadius: 7 }
+        };
+
+        window.onload = function() {
+            document.getElementById('btn-submit').disabled = true;
+            getIpAddress();
+            fetchCommunityGifts(); // Load gifts
+
+            initMediaPipe().then(() => {
+                document.getElementById('ai-loader').innerHTML = "<i class='fas fa-check'></i> AI Đã Sẵn Sàng<br>Giơ tay trước camera để chơi!";
+            });
+
+            document.body.addEventListener('click', function playAudio() {
+                const audio = document.getElementById('bg-music');
+                if(audio.paused) audio.play().catch(e => console.log(e));
+                document.body.removeEventListener('click', playAudio);
+            }, { once: true });
+        };
 
         async function getIpAddress() {
             try {
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 userIp = data.ip;
-                document.getElementById('ip-loading').innerText = "Đã sẵn sàng!";
+                document.getElementById('ip-loading').innerText = "Đã kết nối!";
                 document.getElementById('btn-submit').disabled = false;
             } catch (error) {
-                userIp = "unknown_" + Date.now();
-                document.getElementById('ip-loading').innerText = "Chế độ offline";
+                userIp = "offline";
+                document.getElementById('ip-loading').innerText = "Offline Mode";
                 document.getElementById('btn-submit').disabled = false;
             }
         }
-        
-        window.onload = function() {
-            document.getElementById('btn-submit').disabled = true;
-            document.getElementById('sheet-link-btn').href = GOOGLE_SHEET_LINK;
-            getIpAddress();
+
+        function fetchCommunityGifts() {
+            // Khởi tạo quà hệ thống
+            systemGifts = [
+                { type: 'wish', content: "Chúc bạn một mùa giáng sinh an lành!", sender: "Ông già Noel" },
+                { type: 'wish', content: "Merry Christmas & Happy New Year!", sender: "Tuần lộc mũi đỏ" },
+                { type: 'wish', content: "Chúc bạn luôn vui vẻ và hạnh phúc!", sender: "Người bạn bí ẩn" },
+                { type: 'wish', content: "Giáng sinh ấm áp bên gia đình nhé!", sender: "Cô bé bán diêm" }
+            ];
+
+            // Giả lập fetch quà người dùng (thực tế sẽ gọi API)
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "GetGifts" })
+            }).then(() => console.log("Fetch sent.")).catch(e => console.log(e));
             
-            const audio = document.getElementById('bg-music');
-            safePlay(audio);
-            document.body.addEventListener('click', function playAudio() {
-                safePlay(audio);
-                document.body.removeEventListener('click', playAudio);
-            }, { once: true });
-        };
-
-        async function submitName() {
-            const input = document.getElementById('user-name');
-            const name = input.value.trim();
-            if (!name) { alert("Bạn chưa nhập tên kìa!"); return; }
-            userName = name;
-            userId = 'user_' + Date.now();
-
-            sendToGoogleSheet(userName, userIp, "Đã vào trang", "Chưa mở quà");
-
-            document.getElementById('stage-1').classList.add('hidden');
-            document.getElementById('stage-2').classList.remove('hidden');
-            createTreeLightsStage2();
+            // Ở phiên bản này, userGifts tạm thời rỗng lúc đầu
         }
 
-        function createTreeLightsStage2() {
+        window.submitName = function() {
+            const input = document.getElementById('user-name');
+            userName = input.value.trim();
+            if (!userName) { alert("Bạn chưa nhập tên kìa!"); return; }
+            sendToGoogleSheet(userName, userIp, "Login", "Vào trang");
+            document.getElementById('stage-1').classList.add('hidden');
+            setTimeout(() => {
+                document.getElementById('stage-1').style.display = 'none';
+                document.getElementById('stage-2').classList.remove('hidden');
+                document.getElementById('stage-2').style.opacity = 1;
+                createBulbs();
+            }, 500);
+        }
+
+        window.showGuideModal = function() {
+            document.getElementById('guide-modal').classList.add('active');
+        }
+
+        // --- NEW: TOAST NOTIFICATION ---
+        window.showToast = function(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            // Trigger animation
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function createBulbs() {
             const container = document.getElementById('bulbs-container');
             const colors = ['#ffd700', '#ff4500', '#00ff00', '#ff0000', '#800080'];
-            
             for (let i = 0; i < 7; i++) {
                 const bulbsInRow = i + 1; 
                 const rowWidth = bulbsInRow * 40; 
-                
                 for (let j = 0; j < bulbsInRow; j++) {
                     const bulb = document.createElement('div');
                     bulb.classList.add('bulb');
@@ -285,17 +434,9 @@
                     container.appendChild(bulb);
                 }
             }
-            for(let k=0; k<2; k++) {
-                const bulb = document.createElement('div');
-                bulb.classList.add('bulb');
-                bulb.style.top = '80%'; 
-                bulb.style.left = `calc(50% - 20px + ${k * 40}px)`;
-                bulb.style.backgroundColor = '#8B4513'; 
-                container.appendChild(bulb);
-            }
         }
 
-        function clickLight() {
+        window.clickLight = function() {
             clickCount++;
             const bulbs = document.querySelectorAll('.bulb');
             bulbs.forEach(b => {
@@ -309,75 +450,422 @@
                 setTimeout(() => {
                     document.getElementById('stage-2').classList.add('hidden');
                     document.getElementById('stage-3').classList.remove('hidden');
+                    document.getElementById('stage-3').style.opacity = 1;
                     startScene();
                 }, 1500);
             }
         }
 
         function startScene() {
+            init3DScene(); 
             const audio = document.getElementById('bg-music');
             audio.volume = 0.6;
-            safePlay(audio);
+            audio.play().catch(e => console.log("Autoplay blocked"));
             setInterval(createSnowflake, 150);
             setInterval(launchFirework, 800);
-            decorateRealTree(); 
             setTimeout(() => {
                 document.getElementById('special-gift-container').classList.add('show');
-            }, giftDelay);
+            }, 5000); 
         }
 
-        function decorateRealTree() {
-            const tree = document.getElementById('tree-container');
-            const colors = ['#f00', '#ff0', '#0f0', '#00f', '#fff'];
+        // --- 3D SCENE ---
+        function init3DScene() {
+            if(is3DRunning) return;
+            is3DRunning = true;
+            const container = document.getElementById('canvas-3d-container');
+            scene = new THREE.Scene();
+            scene.background = null; 
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 35); 
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ReinhardToneMapping; 
+            container.appendChild(renderer.domElement);
+
+            mainGroup = new THREE.Group();
+            mainGroup.position.y = 2; 
+            scene.add(mainGroup);
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+            const spotGold = new THREE.SpotLight(0xffcc66, 800);
+            spotGold.position.set(30, 40, 40);
+            scene.add(spotGold);
+
+            const renderScene = new RenderPass(scene, camera);
+            const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+            bloomPass.threshold = 0.6; bloomPass.strength = 0.4; bloomPass.radius = 0.5;
+            composer = new EffectComposer(renderer);
+            composer.addPass(renderScene);
+            composer.addPass(bloomPass);
+
+            createParticles();
+            document.getElementById('file-input-3d').addEventListener('change', handle3DImageUpload);
+            animate3D();
+        }
+
+        function createParticles() {
+            const sphereGeo = new THREE.SphereGeometry(0.5, 16, 16); 
+            const boxGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5); 
+            const goldMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.champagneGold, metalness: 0.8, roughness: 0.2, emissive: 0x443300 });
+            const greenMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.deepGreen, metalness: 0.1, roughness: 0.8 });
+            const redMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.accentRed, metalness: 0.3, roughness: 0.4, emissive: 0x330000 });
+            const orangeMat = new THREE.MeshStandardMaterial({ color: CONFIG.colors.metallicOrange, metalness: 0.9, roughness: 0.1, emissive: 0xaa4400 });
+
+            for (let i = 0; i < CONFIG.particles.count; i++) {
+                const rand = Math.random();
+                let mesh, type = 'DECOR';
+                if (rand < 0.5) { mesh = new THREE.Mesh(boxGeo, greenMat); } 
+                else if (rand < 0.7) { mesh = new THREE.Mesh(sphereGeo, goldMat); } 
+                else if (rand < 0.85) { mesh = new THREE.Mesh(sphereGeo, redMat); } 
+                else { mesh = new THREE.Mesh(sphereGeo, orangeMat); type = 'GIFT_PARTICLE'; }
+
+                const s = 0.3 + Math.random() * 0.4;
+                mesh.scale.set(s,s,s);
+                mainGroup.add(mesh);
+                
+                const h = CONFIG.particles.treeHeight;
+                const halfH = h / 2;
+                let t = Math.random(); t = Math.pow(t, 0.8); 
+                const y = (t * h) - halfH + 1; 
+                let rMax = CONFIG.particles.treeRadius * (1.0 - t); 
+                const angle = t * 40 * Math.PI + Math.random() * Math.PI; 
+                const r = rMax * (0.8 + Math.random() * 0.4); 
+                const posTree = new THREE.Vector3(Math.cos(angle)*r, y, Math.sin(angle)*r);
+
+                const rScatter = 10 + Math.random() * 15;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const posScatter = new THREE.Vector3(rScatter * Math.sin(phi) * Math.cos(theta), rScatter * Math.sin(phi) * Math.sin(theta), rScatter * Math.cos(phi));
+
+                particleSystem.push({
+                    mesh: mesh, posTree: posTree, posScatter: posScatter, type: type, baseScale: s,
+                    spin: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
+                });
+            }
             
-            for(let i=0; i<45; i++) {
-                const light = document.createElement('div');
-                light.classList.add('tree-light');
-                const topPercent = 8 + Math.random() * 65; 
-                const spreadFactor = (topPercent - 8) / 65; 
-                const maxSpread = spreadFactor * 35; 
-                const leftPercent = 50 + (Math.random() * maxSpread * 2 - maxSpread);
-                light.style.top = topPercent + '%';
-                light.style.left = leftPercent + '%';
-                light.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                light.style.animationDelay = Math.random() + 's';
-                tree.appendChild(light);
+            const starGeo = new THREE.OctahedronGeometry(1.2, 0);
+            const starMat = new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: 0xffaa00, emissiveIntensity: 1.0 });
+            const star = new THREE.Mesh(starGeo, starMat);
+            star.position.set(0, CONFIG.particles.treeHeight/2 + 2, 0); 
+            mainGroup.add(star);
+        }
+
+        function handle3DImageUpload(e) {
+            const files = e.target.files;
+            if(!files.length) return;
+            Array.from(files).forEach(f => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    new THREE.TextureLoader().load(ev.target.result, (t) => {
+                        t.colorSpace = THREE.SRGBColorSpace;
+                        addPhotoParticle(t);
+                    });
+                }
+                reader.readAsDataURL(f);
+            });
+        }
+
+        function addPhotoParticle(texture) {
+            const group = new THREE.Group();
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(1.4,1.4,0.05), new THREE.MeshStandardMaterial({color:0xffd700}));
+            const photo = new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2), new THREE.MeshBasicMaterial({map:texture}));
+            photo.position.z = 0.04;
+            group.add(frame); group.add(photo);
+            mainGroup.add(group);
+            
+            const rScatter = 12;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const posScatter = new THREE.Vector3(rScatter * Math.sin(phi) * Math.cos(theta), rScatter * Math.sin(phi) * Math.sin(theta), rScatter * Math.cos(phi));
+            
+            particleSystem.push({
+                mesh: group, type: 'PHOTO',
+                posTree: new THREE.Vector3((Math.random()-0.5)*5, (Math.random()-0.5)*10, (Math.random()-0.5)*5),
+                posScatter: posScatter, baseScale: 1.0,
+                spin: new THREE.Vector3((Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2, 0)
+            });
+            STATE.mode = 'SCATTER';
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const dt = clock.getDelta();
+            if (STATE.hand.detected) {
+                STATE.rotation.y += (STATE.hand.x * 2 - STATE.rotation.y) * 2 * dt;
+            } else {
+                STATE.rotation.y += (STATE.mode === 'TREE' ? 0.3 : 0.1) * dt;
+            }
+            mainGroup.rotation.y = THREE.MathUtils.lerp(mainGroup.rotation.y, STATE.rotation.y, 0.1);
+            particleSystem.forEach(p => {
+                let target = (STATE.mode === 'TREE') ? p.posTree : p.posScatter;
+                let s = p.baseScale;
+                if (STATE.mode === 'FOCUS' && p.mesh === STATE.focusTarget) {
+                    const inv = mainGroup.matrixWorld.clone().invert();
+                    const worldTarget = new THREE.Vector3(0, 0, 32).applyMatrix4(inv);
+                    target = worldTarget; s = 3.0;
+                    p.mesh.lookAt(camera.position);
+                    p.mesh.rotateY(clock.getElapsedTime() * 2);
+                } else if (STATE.mode === 'SCATTER' && p.type === 'PHOTO') { s = 2.0; }
+                p.mesh.position.lerp(target, 3 * dt);
+                p.mesh.scale.lerp(new THREE.Vector3(s,s,s), 4 * dt);
+                if (STATE.mode === 'SCATTER') {
+                    p.mesh.rotation.x += p.spin.x * dt;
+                    p.mesh.rotation.y += p.spin.y * dt;
+                } else if (STATE.mode === 'TREE' && STATE.mode !== 'FOCUS') {
+                    p.mesh.rotation.set(0,0,0);
+                }
+            });
+            composer.render();
+            predictWebcam();
+        }
+
+        async function initMediaPipe() {
+            video = document.getElementById('webcam');
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+            handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`, delegate: "GPU" },
+                runningMode: "VIDEO", numHands: 1
+            });
+            if (navigator.mediaDevices?.getUserMedia) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            }
+        }
+
+        let lastVideoTime = -1;
+        function predictWebcam() {
+            if (!handLandmarker || !video || video.currentTime === lastVideoTime) return;
+            lastVideoTime = video.currentTime;
+            const result = handLandmarker.detectForVideo(video, performance.now());
+            if (result.landmarks && result.landmarks.length > 0) {
+                STATE.hand.detected = true;
+                const lm = result.landmarks[0];
+                STATE.hand.x = (lm[9].x - 0.5) * 2; STATE.hand.y = (lm[9].y - 0.5) * 2;
+                const thumb = lm[4]; const index = lm[8]; const wrist = lm[0];
+                const pinchDist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
+                const tips = [lm[8], lm[12], lm[16], lm[20]];
+                let avgDist = 0; tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
+                avgDist /= 4;
+                if (pinchDist < 0.05) { 
+                    if (STATE.mode !== 'FOCUS') {
+                        const candidates = particleSystem.filter(p => p.type === 'PHOTO' || p.type === 'GIFT_PARTICLE');
+                        const randomTarget = candidates.length > 0 ? candidates[Math.floor(Math.random() * candidates.length)] : particleSystem[Math.floor(Math.random() * particleSystem.length)];
+                        STATE.mode = 'FOCUS'; STATE.focusTarget = randomTarget.mesh;
+                        if(STATE.focusTimeout) clearTimeout(STATE.focusTimeout);
+                        STATE.focusTimeout = setTimeout(() => {
+                            window.openTreeGift();
+                            STATE.mode = 'TREE'; STATE.focusTarget = null;
+                        }, 1200);
+                    }
+                } else if (avgDist < 0.25) { if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE'; }
+                else if (avgDist > 0.4) { if(STATE.mode !== 'FOCUS') STATE.mode = 'SCATTER'; }
+            } else { STATE.hand.detected = false; }
+        }
+
+        // 7 lời chúc tĩnh mới
+        const staticWishes = [
+            "Chúc bạn {name} một mùa Giáng sinh thật an lành và trọn vẹn. Mong rằng những khoảnh khắc trong mùa lễ này sẽ mang đến cho bạn sự ấm áp, bình yên và niềm vui lan tỏa trong từng ngày.",
+            "Merry Christmas! Chúc bạn {name} luôn mỉm cười và hạnh phúc trong suốt mùa lễ hội. Hy vọng tiếng chuông Giáng sinh sẽ mang đến cho bạn những điều may mắn và những cơ hội mới thật tuyệt vời.",
+            "Giáng sinh lại đến, chúc bạn {name} đón mùa lễ trong yêu thương và sự quan tâm của những người thân yêu. Mong rằng mọi ước mơ của bạn sẽ trở thành hiện thực khi năm mới đang đến gần.",
+            "Chúc bạn {name} một Giáng sinh vui vẻ và đầy ý nghĩa. Hy vọng những ngày cuối năm sẽ mang theo hạnh phúc, sự bình an và thật nhiều điều tốt đẹp để bạn bắt đầu một chặng đường mới.",
+            "Giáng sinh vui vẻ! Mong rằng ánh đèn lung linh và không khí ấm áp mùa này sẽ đem lại cho bạn {name} thật nhiều tiếng cười, những kỷ niệm đẹp và những giây phút hạnh phúc khó quên.",
+            "Chúc bạn {name} mùa Noel tràn ngập niềm vui, sức khỏe và bình an. Hy vọng bạn sẽ có thời gian thật đẹp bên gia đình, bạn bè và những người bạn quý trọng nhất.",
+            "Gửi đến bạn {name} lời chúc Noel thật chân thành: mong bạn luôn mạnh mẽ, may mắn và hạnh phúc. Hy vọng năm mới sẽ mở ra nhiều cơ hội tốt đẹp, còn Giáng sinh này sẽ là khởi đầu đầy ấm áp cho tất cả."
+        ];
+
+        const mediaGifts = [
+            { audio: "nhacquatang.mp3", video: "video1.mp4", title: "Món quà âm nhạc 1" },
+            { audio: "nhacquatang2.mp3", video: "video2.mp4", title: "Món quà âm nhạc 2" },
+            { audio: "nhacquatang3.mp3", video: "video3.mp4", title: "Món quà âm nhạc 3" }
+        ];
+
+        window.toggleGiftSound = function() {
+            const effectAudio = document.getElementById('effect-music');
+            if (effectAudio.paused) {
+                effectAudio.play();
+                document.getElementById('sound-btn-icon').className = 'fas fa-volume-up';
+            } else {
+                effectAudio.pause();
+                document.getElementById('sound-btn-icon').className = 'fas fa-volume-mute';
+            }
+        }
+
+        window.openSpecialGift = function() {
+            const modal = document.getElementById('result-modal');
+            const body = document.getElementById('modal-body');
+            document.getElementById('bg-music').pause();
+            
+            const randType = Math.random(); 
+            if(randType < 0.5) {
+                const content = staticWishes[Math.floor(Math.random() * staticWishes.length)].replace(/{name}/g, userName);
+                body.innerHTML = `
+                    <div class="letter-gift">
+                        <h3 style="text-align:center; color: var(--primary-green)">🎄 Thư Giáng Sinh 🎄</h3>
+                        <p>${content}</p>
+                        <span class="signature-fr">-fr:thanhloc-</span>
+                    </div>
+                `;
+            } else {
+                const gift = mediaGifts[Math.floor(Math.random() * mediaGifts.length)];
+                const effectAudio = document.getElementById('effect-music');
+                effectAudio.src = gift.audio;
+                effectAudio.play();
+                
+                body.innerHTML = `
+                    <div class="santa-gift">
+                        <h3 style="color: #d42426; margin-bottom: 5px;">🎅 Ho Ho Ho!</h3>
+                        <p style="font-size: 0.9rem;">Ông già Noel tặng bạn một bài hát!</p>
+                        <div class="video-container">
+                            <!-- THÊM CONTROLS ĐỂ DỄ BẬT -->
+                            <video src="${gift.video}" autoplay loop muted playsinline controls></video>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                            <p style="margin:0; font-weight:bold; color: #333;">🎵 ${gift.title}</p>
+                            <button class="btn-control" onclick="window.toggleGiftSound()">
+                                <i id="sound-btn-icon" class="fas fa-volume-up"></i> Bật/Tắt Tiếng
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
 
-            for(let j=0; j<6; j++) {
-                const extraLight = document.createElement('div');
-                extraLight.classList.add('tree-light');
-                const topP = 25 + Math.random() * 50;
-                const spread = (topP - 8) / 65 * 35;
-                const leftP = 50 - (Math.random() * spread); 
-                
-                extraLight.style.top = topP + '%';
-                extraLight.style.left = leftP + '%';
-                extraLight.style.backgroundColor = '#ff0'; 
-                extraLight.style.boxShadow = "0 0 15px gold"; 
-                extraLight.style.animationDelay = Math.random() + 's';
-                tree.appendChild(extraLight);
+            modal.classList.add('active');
+            document.getElementById('share-form').style.display = 'none';
+            document.getElementById('btn-share-community').style.display = 'inline-block';
+            document.getElementById('special-gift-container').style.display = 'none';
+            sendToGoogleSheet(userName, userIp, "OpenedMainGift", "Success");
+        }
+
+        // --- CẬP NHẬT LOGIC ƯU TIÊN QUÀ NGƯỜI DÙNG ---
+        window.openTreeGift = function() {
+            const modal = document.getElementById('result-modal');
+            const body = document.getElementById('modal-body');
+            document.getElementById('bg-music').pause();
+
+            let gift;
+            
+            // Logic ưu tiên: Nếu có quà user, 80% chọn từ userGifts, 20% chọn systemGifts
+            if (userGifts.length > 0 && Math.random() < 0.8) {
+                gift = userGifts[Math.floor(Math.random() * userGifts.length)];
+            } else {
+                // Nếu không có quà user hoặc rơi vào 20% random
+                gift = systemGifts[Math.floor(Math.random() * systemGifts.length)];
             }
+
+            let htmlContent = '';
+            if (gift.type === 'image') {
+                 htmlContent = `
+                    <div class="letter-gift" style="background: #e0f7fa; border-color: #00bcd4; text-align:center;">
+                        <h3 style="color: #006064">📸 Ảnh Giáng Sinh</h3>
+                        <img src="${gift.content}" style="max-width:100%; border-radius:10px; margin:10px 0;" onerror="this.src='https://via.placeholder.com/300?text=Lỗi+Ảnh'">
+                        <div class="user-gift-meta">Gửi bởi: <b>${gift.sender}</b></div>
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <div class="letter-gift" style="background: #fce4ec; border-color: #ec407a;">
+                        <h3 style="text-align:center; color: #880e4f">🎁 Lời nhắn yêu thương</h3>
+                        <p>"${gift.content}"</p>
+                        <div class="user-gift-meta">
+                            Người gửi: <b>${gift.sender}</b><br>
+                            <span style="font-size:0.8em">Bạn đã bắt được quà trên cây!</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = htmlContent;
+            modal.classList.add('active');
+            document.getElementById('share-form').style.display = 'none';
+            document.getElementById('btn-share-community').style.display = 'inline-block';
+        }
+
+        window.closeModal = function() {
+            document.getElementById('result-modal').classList.remove('active');
+            document.getElementById('effect-music').pause();
+            document.getElementById('effect-music').currentTime = 0;
+            document.getElementById('bg-music').play();
+        }
+
+        let currentShareType = 'text';
+        
+        window.toggleShareForm = function() {
+            const form = document.getElementById('share-form');
+            const btn = document.getElementById('btn-share-community');
+            form.style.display = 'block';
+            btn.style.display = 'none'; 
+        }
+
+        window.setShareType = function(type) {
+            currentShareType = type;
+            document.querySelectorAll('.share-type-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if(type === 'text') {
+                document.getElementById('share-input-text').classList.remove('hidden');
+                document.getElementById('share-input-image').classList.add('hidden');
+            } else {
+                document.getElementById('share-input-text').classList.add('hidden');
+                document.getElementById('share-input-image').classList.remove('hidden');
+            }
+        }
+
+        window.submitUserGift = function() {
+            let content = "";
+            if (currentShareType === 'text') {
+                content = document.getElementById('user-wish-input').value;
+            } else {
+                content = document.getElementById('user-image-url').value;
+                if(!content) content = "[Ảnh tải lên hệ thống]";
+            }
+
+            if (!content) { 
+                window.showToast("Bạn chưa nhập nội dung!"); // Dùng Toast thay alert
+                return; 
+            }
+
+            // Thêm vào danh sách User Gift
+            userGifts.push({
+                type: currentShareType,
+                content: content,
+                sender: userName
+            });
+
+            sendToGoogleSheet(userName, userIp, "ShareGift", content);
+            
+            // Dùng Toast thay alert
+            window.showToast("Đã gửi quà thành công! Cảm ơn bạn.");
+            
+            window.closeModal();
+        }
+
+        function sendToGoogleSheet(name, ip, type, detail) {
+            let action = "Log";
+            if (type === "ShareGift") action = "ShareGift";
+            const data = { action: action, name: name, ip: ip, giftType: type, detail: detail };
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).catch(e => console.log("Log error:", e));
         }
 
         function launchFirework() {
             const container = document.getElementById('fireworks-container');
-            const x = Math.random() * 100;
-            const y = Math.random() * 40;
+            const x = Math.random() * 100; const y = Math.random() * 40;
             for (let i = 0; i < 20; i++) {
                 const p = document.createElement('div');
                 p.classList.add('firework-particle');
                 p.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
                 p.style.left = x + '%'; p.style.top = (y + 10) + '%';
-                const angle = (Math.PI * 2 * i) / 20;
-                const v = 100 + Math.random() * 100;
+                const angle = (Math.PI * 2 * i) / 20; const v = 100 + Math.random() * 100;
                 p.style.setProperty('--tx', Math.cos(angle) * v + 'px');
                 p.style.setProperty('--ty', Math.sin(angle) * v + 'px');
                 container.appendChild(p);
                 setTimeout(() => p.remove(), 1000);
             }
         }
-
         function createSnowflake() {
             const snow = document.createElement('div');
             snow.classList.add('snowflake');
@@ -387,124 +875,6 @@
             document.getElementById('stage-3').appendChild(snow);
             setTimeout(() => snow.remove(), 6000);
         }
-
-        function openSpecialGift() {
-            const hasOpenedLocal = localStorage.getItem('noel_gift_opened');
-            let giftType = 'wish';
-            const rand = Math.random() * 100;
-
-            if (rand < 5 && !hasOpenedLocal) giftType = 'money';
-            else if (rand < 45) giftType = 'santa';
-            else giftType = 'wish';
-
-            let detailInfo = "";
-            let giftMeta = {};
-
-            if (giftType === 'santa') {
-                const songIndex = Math.floor(Math.random() * songList.length);
-                giftMeta = { songUrlIndex: songIndex };
-                detailInfo = `Bài hát: ${songList[songIndex]}`;
-            } else if (giftType === 'wish') {
-                const wishIndex = Math.floor(Math.random() * wishes.length);
-                giftMeta = { wishIndex: wishIndex };
-                detailInfo = `Lời chúc số ${wishIndex + 1}`;
-            } else if (giftType === 'money') {
-                const prize = prizes[Math.floor(Math.random() * prizes.length)];
-                giftMeta = { prize: prize };
-                detailInfo = `${prize.value}đ - Mã: ${prize.code}`;
-            }
-
-            sendToGoogleSheet(userName, userIp, giftType, detailInfo);
-
-            showResult(giftType, giftMeta);
-            document.getElementById('special-gift-container').classList.remove('show');
-            if (giftType === 'money') localStorage.setItem('noel_gift_opened', 'true');
-        }
-
-        function sendToGoogleSheet(name, ip, giftType, detail) {
-            const data = { name: name, ip: ip, giftType: giftType, detail: detail };
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            }).catch(e => console.log("Gửi Google Sheet lỗi:", e));
-        }
-
-        function showResult(type, meta) {
-            const modal = document.getElementById('result-modal');
-            const body = document.getElementById('modal-body');
-            modal.classList.add('active');
-            
-            const bgMusic = document.getElementById('bg-music');
-            if (bgMusic) bgMusic.pause();
-
-            if (type === 'santa') {
-                const songIndex = meta.songUrlIndex % songList.length;
-                const songUrl = songLinks[songIndex];
-                const videoUrl = videoList[songIndex % videoList.length];
-
-                const effect = document.getElementById('effect-music');
-                effect.src = songUrl;
-                safePlay(effect);
-                body.innerHTML = `
-                    <div class="santa-gift">
-                        <h2>🎅 Ho Ho Ho!</h2>
-                        <!-- Video thay cho GIF -->
-                        <video src="${videoUrl}" autoplay loop muted playsinline style="width:100%; border-radius:10px; margin-bottom:10px;"></video>
-                        
-                        <p>Ông già Noel hát tặng bạn ${userName}!</p>
-                        <p style="font-weight:bold; color:var(--primary-green)">${songList[songIndex]}</p>
-                        
-                        <!-- Nút nghe nhạc thay cho dòng hiển thị tên file -->
-                        <button class="btn" onclick="document.getElementById('effect-music').play()" style="padding: 5px 15px; font-size: 0.9rem; margin-top: 5px;">
-                            <i class="fas fa-music"></i> Ấn vào để nghe
-                        </button>
-                    </div>
-                `;
-            } else if (type === 'wish') {
-                body.innerHTML = `<div class="letter-gift"><h3 style="text-align:center; color: var(--primary-green)">🎄 Thư Giáng Sinh 🎄</h3><p>${wishes[meta.wishIndex].replace(/{name}/g, `<b>${userName}</b>`)}</p><p style="text-align:right">- Gửi từ Thành Lộc ở Vũ Trụ Noel🎀 -</p></div>`;
-            } else if (type === 'money') {
-                body.innerHTML = `<div class="money-gift"><h2>🎉 CHÚC MỪNG 🎉</h2><p>Bạn ${userName} may mắn!</p><div class="money-amount">${meta.prize.value}đ</div><p>Mã trúng thưởng của bạn: <strong>${meta.prize.code}</strong></p><p style="font-size:0.9rem; color:#555">Hãy chụp màn hình và liên hệ Admin ngay:</p><a href="https://m.me/thanhloc2906208" target="_blank" class="messenger-btn"><i class="fab fa-facebook-messenger"></i> Nhận thưởng ngay</a><p style="margin-top:10px; font-size:0.8rem; color: red;">*Ghi chú: Kèm mã trúng thưởng khi nhắn tin</p></div>`;
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('result-modal').classList.remove('active');
-            
-            const bgMusic = document.getElementById('bg-music');
-            safePlay(bgMusic);
-            
-            const effectMusic = document.getElementById('effect-music');
-            if (effectMusic) effectMusic.pause();
-        }
-
-        let secretClickCount = 0;
-        let secretClickTimer;
-
-        function handleTikTokClick() {
-            secretClickCount++;
-            clearTimeout(secretClickTimer);
-            
-            if (secretClickCount === 3) {
-                secretClickCount = 0;
-                const password = prompt("Nhập mật khẩu Admin:", "");
-                if (password === "123456") {
-                    document.getElementById('admin-modal').classList.add('active');
-                } else if (password !== null) {
-                    alert("Sai mật khẩu!");
-                }
-            } else {
-                secretClickTimer = setTimeout(() => {
-                    if (secretClickCount === 1) {
-                        window.open("https://www.tiktok.com/@l0t968ooo ", "_blank");
-                    }
-                    secretClickCount = 0;
-                }, 400);
-            }
-        }
-
-        function closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); }
     </script>
 </body>
 </html>
