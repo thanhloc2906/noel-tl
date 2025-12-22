@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giáng Sinh Yêu Thương 3D</title>
+    <title>Giáng Sinh</title>
     <!-- Import font chữ đẹp -->
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
@@ -51,7 +51,8 @@
 
         /* Stage 3 - Main Scene */
         #stage-3 { 
-            background: linear-gradient(to bottom, #d6eaf8, #ebf5fb, #ffffff);
+            /* Cập nhật nền trắng theo yêu cầu */
+            background: #ffffff;
             position: absolute; top: 0; left: 0; height: 100vh; width: 100vw; overflow: hidden; z-index: 50; 
             color: var(--text-dark); 
         }
@@ -641,6 +642,14 @@
         // --- CẬP NHẬT LOGIC NHẬN DIỆN CỬ CHỈ ---
         function predictWebcam() {
             if (!handLandmarker || !video || video.currentTime === lastVideoTime) return;
+            
+            // --- LOGIC MỚI: CHẶN CỬ CHỈ KHI MODAL MỞ ---
+            // Nếu hộp quà tĩnh hoặc hướng dẫn đang mở, không xử lý cử chỉ tay
+            if (document.getElementById('result-modal').classList.contains('active') || 
+                document.getElementById('guide-modal').classList.contains('active')) {
+                return;
+            }
+
             lastVideoTime = video.currentTime;
             const result = handLandmarker.detectForVideo(video, performance.now());
             
@@ -774,11 +783,11 @@
 
             let gift;
             
-            // Logic ưu tiên: Nếu có quà user, 80% chọn từ userGifts, 20% chọn systemGifts
-            if (userGifts.length > 0 && Math.random() < 0.8) {
+            // Logic ưu tiên: Nếu có quà user, 95% chọn từ userGifts, 5% chọn systemGifts
+            if (userGifts.length > 0 && Math.random() < 0.95) {
                 gift = userGifts[Math.floor(Math.random() * userGifts.length)];
             } else {
-                // Nếu không có quà user hoặc rơi vào 20% random
+                // Nếu không có quà user hoặc rơi vào 5% random
                 gift = systemGifts[Math.floor(Math.random() * systemGifts.length)];
             }
 
