@@ -121,7 +121,7 @@
         /* Tiktok Logo nhỏ hơn */
         .tiktok-logo { 
             position: fixed; bottom: 20px; left: 20px; 
-            width: 25px; /* Nhỏ nữa */
+            width: 10px; /* Nhỏ lại theo yêu cầu */
             z-index: 150; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); 
             cursor: pointer; transition: transform 0.1s; 
         }
@@ -571,16 +571,25 @@
             
             // Star Logic
             if (starMesh) {
+                const originalY = CONFIG.particles.treeHeight/2 + 2; 
+                let targetPos = new THREE.Vector3(0, originalY, 0); 
+                let targetScale = 1.0;
+
                 if (STATE.mode === 'SCATTER') {
-                    // Khi xòe tay, ngôi sao xoay tròn tại chỗ
+                    // Khi xòe tay, ngôi sao xoay tròn tại chỗ và di chuyển xuống giữa
+                    targetPos.set(0, 0, 15); 
+                    targetScale = 3.0;
+
                     starMesh.rotation.y += 2 * dt;
-                    starMesh.rotation.z = Math.sin(clock.getElapsedTime()*3) * 0.1;
-                    starMesh.scale.setScalar(1.5);
+                    starMesh.rotation.z = Math.sin(clock.getElapsedTime()*3) * 0.2;
                 } else {
                     starMesh.rotation.y += 0.5 * dt;
                     starMesh.rotation.z = 0;
-                    starMesh.scale.setScalar(1.0);
                 }
+                
+                starMesh.position.lerp(targetPos, 2 * dt);
+                const s = THREE.MathUtils.lerp(starMesh.scale.x, targetScale, 2 * dt);
+                starMesh.scale.setScalar(s);
             }
 
             particleSystem.forEach(p => {
