@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giáng Sinh Yêu Thương 3D</title>
+    <title>Giáng Sinh</title>
     <!-- Import font chữ đẹp -->
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
@@ -655,13 +655,8 @@
                 tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
                 avgDist /= 4;
 
-                if (avgDist < 0.3) { 
-                    if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE';
-                } 
-                else if (avgDist > 0.45) { 
-                    if(STATE.mode !== 'FOCUS') STATE.mode = 'SCATTER';
-                } 
-                else if (pinchDist < 0.06) { 
+                // Cập nhật logic: Ưu tiên chụm tay trước
+                if (pinchDist < 0.06 && avgDist > 0.25) { 
                     if (STATE.mode !== 'FOCUS') {
                         const candidates = particleSystem.filter(p => p.type === 'PHOTO' || p.type === 'GIFT_PARTICLE');
                         const randomTarget = candidates.length > 0 ? candidates[Math.floor(Math.random() * candidates.length)] : particleSystem[Math.floor(Math.random() * particleSystem.length)];
@@ -675,6 +670,12 @@
                             STATE.mode = 'TREE'; STATE.focusTarget = null;
                         }, 1200);
                     }
+                } 
+                else if (avgDist > 0.45) { 
+                    if(STATE.mode !== 'FOCUS') STATE.mode = 'SCATTER';
+                } 
+                else if (avgDist < 0.3) { 
+                    if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE';
                 }
             } else { 
                 STATE.hand.detected = false; 
@@ -780,13 +781,15 @@
             sendToGoogleSheet(userName, userIp, "OpenedMainGift", "Success");
         }
 
+        // --- CẬP NHẬT TỶ LỆ QUÀ NGƯỜI DÙNG: 98% ---
         window.openTreeGift = function() {
             const modal = document.getElementById('result-modal');
             const body = document.getElementById('modal-body');
             document.getElementById('bg-music').pause();
 
             let gift;
-            if (userGifts.length > 0 && Math.random() < 0.95) {
+            // 98% user gift, 2% system gift
+            if (userGifts.length > 0 && Math.random() < 0.98) {
                 gift = userGifts[Math.floor(Math.random() * userGifts.length)];
             } else {
                 gift = systemGifts[Math.floor(Math.random() * systemGifts.length)];
