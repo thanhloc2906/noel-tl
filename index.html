@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giáng Sinh</title>
+    <title>Giáng Sinh Yêu Thương 3D</title>
     <!-- Import font chữ đẹp -->
     <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
@@ -22,8 +22,8 @@
     </script>
 
     <style>
-        /* --- CSS GỐC CỦA INDEX (Đã chỉnh sửa để hợp nhất) --- */
-        :root { --primary-red: #d42426; --primary-green: #165b33; --gold: #ffd700; --snow-white: #f0f8ff; --text-dark: #2c3e50; }
+        /* --- CSS GỐC CỦA INDEX (Đã chỉnh sửa) --- */
+        :root { --primary-red: #ff3333; --primary-green: #2ecc71; --gold: #ffd700; --snow-white: #f0f8ff; --text-dark: #2c3e50; }
         body { margin: 0; padding: 0; font-family: 'Quicksand', sans-serif; overflow: hidden; background-color: #0f172a; height: 100vh; width: 100vw; color: white; }
         .hidden { display: none !important; opacity: 0; pointer-events: none; } 
         .flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; text-align: center; }
@@ -49,36 +49,38 @@
         .bulb.on { opacity: 1; box-shadow: 0 0 15px 5px currentColor; animation: flash 0.8s ease-in-out; }
         @keyframes flash { 0% { transform: scale(1); opacity: 0; } 10% { transform: scale(1.5); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(1); opacity: 0; } }
         
-        /* Chỉnh vị trí nút Bật đèn xuống dưới cùng */
-        #light-btn {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 0;
-        }
+        #light-btn { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); margin-top: 0; }
 
-        /* Stage 3 - Main Scene */
+        /* Stage 3 - NỀN XANH TUYẾT & ĐỒI NÚI */
         #stage-3 { 
-            /* Nền trắng xanh tuyết */
-            background: linear-gradient(to bottom, #d7eefc, #eef7fc, #ffffff);
+            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); /* Fallback */
+            background: linear-gradient(to bottom, #0f2027, #203a43, #d6eaf8); /* Xanh tuyết từ tối đến sáng */
             position: absolute; top: 0; left: 0; height: 100vh; width: 100vw; overflow: hidden; z-index: 50; 
             color: var(--text-dark); 
         }
 
-        #canvas-3d-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2; 
-            pointer-events: auto; 
+        /* Thêm núi phía sau */
+        .mountain-bg {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 40vh; z-index: 2; pointer-events: none;
+            background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.8) 100%);
         }
+        .mountain-1 {
+            position: absolute; bottom: 0; left: -20%; width: 70%; height: 35vh; 
+            background: #e3f2fd; border-radius: 100% 0 0 0; transform: skewX(-20deg); z-index: 1;
+        }
+        .mountain-2 {
+            position: absolute; bottom: 0; right: -20%; width: 80%; height: 45vh; 
+            background: #d6eaf8; border-radius: 0 100% 0 0; transform: skewX(20deg); z-index: 1;
+        }
+
+        #canvas-3d-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; pointer-events: auto; }
         
         #webcam-wrapper { display: none; }
 
         #ai-loader {
             position: absolute; top: 10px; right: 10px; z-index: 200;
             color: #d4af37; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
-            background: rgba(0,0,0,0.8); 
-            padding: 5px 10px; border-radius: 5px;
+            background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 5px;
         }
 
         .fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
@@ -89,7 +91,7 @@
         .cloud { position: absolute; width: 150px; opacity: 0.9; animation: floatCloud 30s linear infinite; filter: brightness(1.2); } 
         @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
         
-        .snow-hill { position: absolute; bottom: 0; left: 0; width: 100%; height: 25vh; background: #ffffff; border-radius: 100% 100% 0 0 / 50% 50% 0 0; transform: scaleX(1.5); z-index: 3; box-shadow: 0 -5px 20px rgba(176, 196, 222, 0.5); pointer-events: none; }
+        .snow-hill { position: absolute; bottom: 0; left: 0; width: 100%; height: 20vh; background: #ffffff; border-radius: 100% 100% 0 0 / 50% 50% 0 0; transform: scaleX(1.5); z-index: 3; box-shadow: 0 -5px 20px rgba(176, 196, 222, 0.5); pointer-events: none; }
         
         .santa-fly { position: absolute; top: 10%; left: -300px; width: 250px; z-index: 4; animation: flyAcross 20s linear infinite; }
         .santa-fly img { width: 100%; }
@@ -103,7 +105,7 @@
         .big-gift-img { width: 140px; cursor: pointer; filter: drop-shadow(0 0 20px gold); animation: shake 2s infinite; }
         @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
         
-        .snowflake { position: absolute; top: -10px; color: #a9cce3; font-size: 1.2em; font-family: Arial, sans-serif; text-shadow: 0 0 2px #fff; z-index: 5; animation: fall linear infinite; opacity: 0.8; }
+        .snowflake { position: absolute; top: -10px; color: #fff; font-size: 1.2em; font-family: Arial, sans-serif; text-shadow: 0 0 2px #a9cce3; z-index: 5; animation: fall linear infinite; opacity: 0.8; }
         @keyframes fall { to { transform: translateY(105vh); } }
         
         /* Modals */
@@ -113,13 +115,13 @@
         
         .letter-gift { background: #fffde7; padding: 20px; border: 1px dashed #999; font-family: 'Times New Roman', serif; font-size: 1.2rem; line-height: 1.6; text-align: left; white-space: pre-wrap; }
         
-        /* CẬP NHẬT CSS VIDEO */
         .video-container { width: 100%; margin-top: 10px; background: #000; border-radius: 10px; overflow: hidden; min-height: 200px; display: flex; align-items: center; justify-content: center; }
         .video-container video { width: 100%; height: auto; display: block; max-height: 250px; }
 
+        /* Tiktok Logo nhỏ hơn */
         .tiktok-logo { 
             position: fixed; bottom: 20px; left: 20px; 
-            width: 35px; /* Nhỏ lại */
+            width: 25px; /* Nhỏ nữa */
             z-index: 150; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); 
             cursor: pointer; transition: transform 0.1s; 
         }
@@ -129,13 +131,10 @@
         .signature-fr { display: block; text-align: right; margin-top: 15px; font-weight: bold; color: var(--primary-green); font-style: italic; }
 
         #share-form { display: none; margin-top: 15px; border-top: 2px dashed #ddd; padding-top: 15px; }
-        /* Ẩn share type selector vì giờ gộp chung */
         .share-type-selector { display: none; }
-        
         .guide-text { text-align: left; line-height: 1.6; font-size: 1rem; }
         .guide-text li { margin-bottom: 8px; }
 
-        /* --- TOAST NOTIFICATION (POPUP NỔI) --- */
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 1000; pointer-events: none;
@@ -152,6 +151,9 @@
         }
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast i { color: var(--primary-red); font-size: 1.2rem; }
+        
+        /* Ẩn control 3D thừa */
+        #ui-3d-controls { display: none; }
     </style>
 </head>
 <body>
@@ -184,14 +186,15 @@
 
     <!-- STAGE 3 (MAIN): KHUNG CẢNH NOEL 3D -->
     <div id="stage-3" class="hidden">
+        <div class="mountain-1"></div>
+        <div class="mountain-2"></div>
+        <div class="mountain-bg"></div>
         
         <div id="canvas-3d-container"></div>
         <div id="ai-loader">
             <i class="fas fa-hand-sparkles"></i> Cho phép Camera để dùng tay tương tác!<br>
             <span style="font-size:0.8em; font-weight:normal;">(Nắm: Cây thường • Xòe: Bung cây • Chụm: Lấy quà)</span>
         </div>
-
-        <!-- Đã bỏ nút treo ảnh lên cây -->
 
         <div class="fireworks-container" id="fireworks-container"></div>
         <div class="clouds-container">
@@ -217,7 +220,7 @@
             <div class="btn" style="padding: 5px 20px; font-size: 1.1rem; margin-top: 10px;" onclick="window.openSpecialGift()">Mở Ngay 🎁</div>
         </div>
 
-        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/logo-tiktok.png?alt=media&token=4473a42a-e492-4a4d-8821-ed9348ac2339" class="tiktok-logo" alt="TikTok" onclick="window.open('https://www.tiktok.com/@l0t968ooo', '_blank')">
+        <img src="https://firebasestorage.googleapis.com/v0/b/webai-54992.appspot.com/o/logo-tiktok.png?alt=media&token=4473a42a-e492-4a4d-8821-ed9348ac2339" class="tiktok-logo" alt="TikTok" onclick="window.handleTikTokClick()">
     </div>
     
     <!-- TOAST CONTAINER -->
@@ -238,7 +241,7 @@
                     <li><b>Bước 2 (Camera):</b> Dùng các cử chỉ tay để tương tác:
                         <ul>
                             <li>✊ <b>Nắm bàn tay:</b> Cây thông bình thường.</li>
-                            <li>🖐 <b>Xòe bàn tay:</b> Cây bung ra (Explode).</li>
+                            <li>🖐 <b>Xòe bàn tay:</b> Cây bung ra (Explode), ngôi sao tỏa sáng.</li>
                             <li>👌 <b>Chụm 2 ngón (Cái & Trỏ):</b> Bắt lấy quà trên cây để mở.</li>
                             <li>👋 <b>Phẩy tay (Trái/Phải):</b> Xoay cây thông.</li>
                         </ul>
@@ -304,6 +307,7 @@
         
         // --- 3D & AI VARIABLES ---
         let scene, camera, renderer, composer, mainGroup, particleSystem = [];
+        let starMesh; // Reference to the star
         let clock = new THREE.Clock();
         let handLandmarker, video;
         let is3DRunning = false;
@@ -318,10 +322,11 @@
 
         const CONFIG = {
             colors: { 
-                champagneGold: 0xffd966, 
-                deepGreen: 0x03180a, 
-                accentRed: 0xd42426, 
-                metallicOrange: 0xffa500 
+                // Màu tươi hơn
+                champagneGold: 0xffd700, 
+                deepGreen: 0x008000, 
+                accentRed: 0xff0000, 
+                metallicOrange: 0xff8800 
             },
             particles: { count: 2500, treeHeight: 20, treeRadius: 7 }
         };
@@ -329,7 +334,7 @@
         window.onload = function() {
             document.getElementById('btn-submit').disabled = true;
             getIpAddress();
-            fetchCommunityGifts(); // Load gifts
+            fetchCommunityGifts(); 
 
             initMediaPipe().then(() => {
                 document.getElementById('ai-loader').innerHTML = "<i class='fas fa-check'></i> AI Đã Sẵn Sàng<br>✊ Nắm: Cây thường | 🖐 Xòe: Bung cây | 👌 Chụm: Lấy quà";
@@ -357,7 +362,6 @@
         }
 
         function fetchCommunityGifts() {
-            // Khởi tạo quà hệ thống
             systemGifts = [
                 { text: "Chúc bạn một mùa giáng sinh an lành!", image: "", sender: "Ông già Noel" },
                 { text: "Merry Christmas & Happy New Year!", image: "", sender: "Tuần lộc mũi đỏ" },
@@ -365,14 +369,11 @@
                 { text: "Giáng sinh ấm áp bên gia đình nhé!", image: "", sender: "Cô bé bán diêm" }
             ];
 
-            // Giả lập fetch quà người dùng (thực tế sẽ gọi API)
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST", mode: "no-cors", 
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "GetGifts" })
             }).then(() => console.log("Fetch sent.")).catch(e => console.log(e));
-            
-            // Ở phiên bản này, userGifts tạm thời rỗng lúc đầu
         }
 
         window.submitName = function() {
@@ -393,18 +394,13 @@
             document.getElementById('guide-modal').classList.add('active');
         }
 
-        // --- NEW: TOAST NOTIFICATION ---
         window.showToast = function(message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast';
             toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
             container.appendChild(toast);
-
-            // Trigger animation
             requestAnimationFrame(() => toast.classList.add('show'));
-
-            // Remove after 3s
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 400);
@@ -493,8 +489,25 @@
             composer.addPass(bloomPass);
 
             createParticles();
-            // Đã bỏ listener upload ảnh
             animate3D();
+        }
+
+        // Tạo hình ngôi sao
+        function createStarShape() {
+            const shape = new THREE.Shape();
+            const outerRadius = 1.2;
+            const innerRadius = 0.6;
+            const points = 5;
+            const step = Math.PI / points;
+            
+            shape.moveTo(0, outerRadius);
+            for(let i = 0; i < 2 * points; i++) {
+                const r = (i % 2 === 1) ? outerRadius : innerRadius;
+                const a = (i + 1) * step;
+                shape.lineTo(Math.sin(a) * r, Math.cos(a) * r);
+            }
+            shape.closePath();
+            return shape;
         }
 
         function createParticles() {
@@ -537,23 +550,39 @@
                 });
             }
             
-            const starGeo = new THREE.OctahedronGeometry(1.2, 0);
-            const starMat = new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: 0xffaa00, emissiveIntensity: 1.0 });
-            const star = new THREE.Mesh(starGeo, starMat);
-            star.position.set(0, CONFIG.particles.treeHeight/2 + 2, 0); 
-            mainGroup.add(star);
+            // TẠO NGÔI SAO 3D
+            const starShape = createStarShape();
+            const starGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.4, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 2 });
+            const starMat = new THREE.MeshStandardMaterial({ color: 0xffdd00, emissive: 0xffaa00, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.2 });
+            starMesh = new THREE.Mesh(starGeo, starMat);
+            starMesh.position.set(0, CONFIG.particles.treeHeight/2 + 2, 0); 
+            mainGroup.add(starMesh);
         }
 
         function animate3D() {
             requestAnimationFrame(animate3D);
             const dt = clock.getDelta();
             if (STATE.hand.detected) {
-                // Tăng tốc độ xoay để "phẩy" nhạy hơn một chút
                 STATE.rotation.y += (STATE.hand.x * 2.5 - STATE.rotation.y) * 3 * dt;
             } else {
                 STATE.rotation.y += (STATE.mode === 'TREE' ? 0.3 : 0.1) * dt;
             }
             mainGroup.rotation.y = THREE.MathUtils.lerp(mainGroup.rotation.y, STATE.rotation.y, 0.1);
+            
+            // Star Logic
+            if (starMesh) {
+                if (STATE.mode === 'SCATTER') {
+                    // Khi xòe tay, ngôi sao xoay tròn tại chỗ
+                    starMesh.rotation.y += 2 * dt;
+                    starMesh.rotation.z = Math.sin(clock.getElapsedTime()*3) * 0.1;
+                    starMesh.scale.setScalar(1.5);
+                } else {
+                    starMesh.rotation.y += 0.5 * dt;
+                    starMesh.rotation.z = 0;
+                    starMesh.scale.setScalar(1.0);
+                }
+            }
+
             particleSystem.forEach(p => {
                 let target = (STATE.mode === 'TREE') ? p.posTree : p.posScatter;
                 let s = p.baseScale;
@@ -592,11 +621,9 @@
 
         let lastVideoTime = -1;
         
-        // --- CẬP NHẬT LOGIC NHẬN DIỆN CỬ CHỈ ---
         function predictWebcam() {
             if (!handLandmarker || !video || video.currentTime === lastVideoTime) return;
             
-            // --- LOGIC MỚI: CHẶN CỬ CHỈ KHI MODAL MỞ ---
             if (document.getElementById('result-modal').classList.contains('active') || 
                 document.getElementById('guide-modal').classList.contains('active')) {
                 return;
@@ -612,16 +639,13 @@
                 STATE.hand.y = (lm[9].y - 0.5) * 2;
 
                 const thumb = lm[4]; const index = lm[8]; const wrist = lm[0];
-                // Khoảng cách ngón cái - ngón trỏ (cho Pinch)
                 const pinchDist = Math.hypot(thumb.x - index.x, thumb.y - index.y);
                 
-                // Khoảng cách trung bình các đầu ngón tay tới cổ tay (cho Fist/Open)
                 const tips = [lm[8], lm[12], lm[16], lm[20]];
                 let avgDist = 0; 
                 tips.forEach(t => avgDist += Math.hypot(t.x - wrist.x, t.y - wrist.y));
                 avgDist /= 4;
 
-                // LOGIC MỚI: ƯU TIÊN FIST (NẮM) TRƯỚC
                 if (avgDist < 0.3) { 
                     if(STATE.mode !== 'FOCUS') STATE.mode = 'TREE';
                 } 
@@ -648,7 +672,33 @@
             }
         }
 
-        // 7 lời chúc tĩnh mới
+        // LOGIC TIKTOK ADMIN
+        let tiktokClicks = 0;
+        let tiktokTimer = null;
+
+        window.handleTikTokClick = function() {
+            tiktokClicks++;
+            if (tiktokClicks === 1) {
+                tiktokTimer = setTimeout(() => {
+                    if (tiktokClicks < 3) {
+                        window.open('https://www.tiktok.com/@l0t968ooo', '_blank');
+                    }
+                    tiktokClicks = 0;
+                }, 500); // Đợi 500ms xem có click tiếp không
+            } else if (tiktokClicks === 3) {
+                clearTimeout(tiktokTimer); // Hủy mở tiktok
+                const pass = prompt("Nhập mật khẩu Admin:");
+                if (pass === "123456") {
+                    window.open("https://docs.google.com/spreadsheets/u/0/", "_blank");
+                } else if (pass) {
+                    alert("Sai mật khẩu!");
+                }
+                tiktokClicks = 0;
+            }
+        }
+
+        // ... Các phần logic còn lại (Static Wishes, Media Gifts, Audio, Modal) giữ nguyên ...
+        
         const staticWishes = [
             "Chúc bạn {name} một mùa Giáng sinh thật an lành và trọn vẹn. Mong rằng những khoảnh khắc trong mùa lễ này sẽ mang đến cho bạn sự ấm áp, bình yên và niềm vui lan tỏa trong từng ngày.",
             "Merry Christmas! Chúc bạn {name} luôn mỉm cười và hạnh phúc trong suốt mùa lễ hội. Hy vọng tiếng chuông Giáng sinh sẽ mang đến cho bạn những điều may mắn và những cơ hội mới thật tuyệt vời.",
@@ -702,7 +752,6 @@
                         <h3 style="color: #d42426; margin-bottom: 5px;">🎅 Ho Ho Ho!</h3>
                         <p style="font-size: 0.9rem;">Ông già Noel tặng bạn một bài hát!</p>
                         <div class="video-container">
-                            <!-- THÊM CONTROLS ĐỂ DỄ BẬT -->
                             <video src="${gift.video}" autoplay loop muted playsinline controls></video>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
@@ -722,38 +771,28 @@
             sendToGoogleSheet(userName, userIp, "OpenedMainGift", "Success");
         }
 
-        // --- CẬP NHẬT LOGIC ƯU TIÊN QUÀ NGƯỜI DÙNG ---
         window.openTreeGift = function() {
             const modal = document.getElementById('result-modal');
             const body = document.getElementById('modal-body');
             document.getElementById('bg-music').pause();
 
             let gift;
-            
-            // Logic ưu tiên: Nếu có quà user, 95% chọn từ userGifts, 5% chọn systemGifts
             if (userGifts.length > 0 && Math.random() < 0.95) {
                 gift = userGifts[Math.floor(Math.random() * userGifts.length)];
             } else {
-                // Nếu không có quà user hoặc rơi vào 5% random
                 gift = systemGifts[Math.floor(Math.random() * systemGifts.length)];
             }
 
-            let htmlContent = '';
-            
-            // Hiển thị quà dựa trên nội dung (text/image)
-            htmlContent = `<div class="letter-gift" style="background: #e0f7fa; border-color: #00bcd4; text-align:center;">`;
-            
+            let htmlContent = `<div class="letter-gift" style="background: #e0f7fa; border-color: #00bcd4; text-align:center;">`;
             if (gift.image && gift.image.trim() !== "") {
                 htmlContent += `<h3 style="color: #006064">📸 Ảnh Giáng Sinh</h3>
                                 <img src="${gift.image}" style="max-width:100%; border-radius:10px; margin:10px 0;" onerror="this.src='https://via.placeholder.com/300?text=Lỗi+Ảnh'">`;
             } else {
                 htmlContent += `<h3 style="color: #006064">🎁 Lời nhắn yêu thương</h3>`;
             }
-            
             if (gift.text) {
                 htmlContent += `<p style="margin-top:10px; color: #333;">"${gift.text}"</p>`;
             }
-            
             htmlContent += `<div class="user-gift-meta">Gửi bởi: <b>${gift.sender}</b></div></div>`;
 
             body.innerHTML = htmlContent;
@@ -777,7 +816,6 @@
         }
 
         window.submitUserGift = function() {
-            // Lấy cả text và image
             const textContent = document.getElementById('user-wish-input').value;
             const imageUrl = document.getElementById('user-image-url').value;
 
@@ -786,14 +824,12 @@
                 return; 
             }
 
-            // Thêm vào danh sách User Gift
             userGifts.push({
                 text: textContent,
                 image: imageUrl,
                 sender: userName
             });
 
-            // Gửi cả 2 trường lên (ghép lại để log đơn giản hoặc sửa logic server nếu cần, ở đây giả lập gửi text làm chính)
             const detailLog = `Text: ${textContent} | Img: ${imageUrl}`;
             sendToGoogleSheet(userName, userIp, "ShareGift", detailLog);
             
